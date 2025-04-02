@@ -1,0 +1,52 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-04-02 11:45:42.252793",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "effective_from",
+  "previous_wages",
+  "increment",
+  "current_wages"
+ ],
+ "fields": [
+  {
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Effective From"
+  },
+  {
+   "fieldname": "previous_wages",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Previous Wages"
+  },
+  {
+   "fieldname": "increment",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Increment"
+  },
+  {
+   "fieldname": "current_wages",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Current Wages"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-04-02 11:46:57.193389",
+ "modified_by": "Administrator",
+ "module": "Essdee Attendance",
+ "name": "SD Increment Record",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

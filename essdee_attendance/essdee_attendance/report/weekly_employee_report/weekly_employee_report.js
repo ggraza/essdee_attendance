@@ -25,7 +25,7 @@ function set_cell_height() {
 }
 
 function get_rows() {
-	if (frappe.query_report.get_filter_value('pf_view')) {
+	if (frappe.query_report.get_filter_value('select') == "PF View") {
 		return 1;
 	}
 	let rows = 0;
@@ -105,26 +105,22 @@ frappe.query_reports["Weekly Employee Report"] = {
 			"fieldname":"select",
 			"label":"Select",
 			"fieldtype":"Select",
-			"options":"Day Wise Report\nSummarized Report",
+			"options":"Day Wise Report\nSummarized Report\nPF View",
 			"default":"Day Wise Report",
 			on_change: ()=> {
 				if(frappe.query_report.get_filter_value("select") == "Day Wise Report"){
-					frappe.query_report.set_filter_value("pf_view", 0)
-					frappe.query_report.filters[9].toggle(0)
+					frappe.query_report.filters[9].toggle(1)
 					frappe.query_report.filters[10].toggle(1)
 					frappe.query_report.filters[11].toggle(1)
 					frappe.query_report.filters[12].toggle(1)
 					frappe.query_report.filters[13].toggle(1)
-					frappe.query_report.filters[14].toggle(1)
 				}
 				else if(frappe.query_report.get_filter_value("select") == "Summarized Report"){
-					frappe.query_report.set_filter_value("pf_view", 0)
-					frappe.query_report.filters[9].toggle(1)
+					frappe.query_report.filters[9].toggle(0)
 					frappe.query_report.filters[10].toggle(0)
 					frappe.query_report.filters[11].toggle(0)
 					frappe.query_report.filters[12].toggle(0)
 					frappe.query_report.filters[13].toggle(0)
-					frappe.query_report.filters[14].toggle(0)
 				}
 				else{
 					frappe.query_report.filters[9].toggle(0)
@@ -132,18 +128,7 @@ frappe.query_reports["Weekly Employee Report"] = {
 					frappe.query_report.filters[11].toggle(0)
 					frappe.query_report.filters[12].toggle(0)
 					frappe.query_report.filters[13].toggle(0)
-					frappe.query_report.filters[14].toggle(0)
 				}
-				frappe.query_report.refresh();
-			}
-		},
-		{
-			"fieldname":"pf_view",
-			"label": __("PF View"),
-			"fieldtype": "Check",
-			"default": 0,
-			on_change: () => {
-				set_cell_height();
 				frappe.query_report.refresh();
 			}
 		},
@@ -212,10 +197,7 @@ frappe.query_reports["Weekly Employee Report"] = {
 		})
 	},
 	onload(){
-		if(frappe.query_report.get_filter_value("select") == "Day Wise Report"){
-			frappe.query_report.set_filter_value("pf_view", 0)
-			frappe.query_report.filters[9].toggle(0)
-		}
+		frappe.query_report.set_filter_value("select", frappe.query_report.get_filter_value("select"))
 		frappe.query_report.refresh();
 	}
 }
