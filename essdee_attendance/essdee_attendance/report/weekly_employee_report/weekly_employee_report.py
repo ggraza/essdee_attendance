@@ -19,14 +19,19 @@ def execute(filters=None):
 	
 def get_columns(filters):
 	columns = [
-		# {"label": _("Serial No."),"fieldname": "serial","fieldtype": "data","width": 115},
 		{"label": _("Employee"),"fieldname": "employee","fieldtype": "Link","options": "Employee","width": 115},
 		{"label": _("Employee Name"), "fieldname": "employee_name", "fieldtype": "Data", "width": 120},
 		{"label": _("Department"), "fieldname":"department","fieldtype":"Link","options":"Department","width": 120},
 		{"label": _("Designation"), "fieldname":"designation","fieldtype":"Link","options":"Designation","width": 120},
 		{"label": _("Employment Type"), "fieldname":"employment_type","fieldtype":"Link","options":"Employment Type","width": 120},
+		{"label": _("Branch"), "fieldname":"branch","fieldtype":"Link","options":"Branch","width": 120},
 	]
 	if filters.select == "PF View":
+		columns.extend([
+			{"label": _("ESIC"), "fieldname": "esic", "fieldtype": "Data", "width": 100},
+			{"label": _("UAN"), "fieldname": "uan", "fieldtype": "Data", "width": 100},
+		])
+		columns.extend(get_columns_for_days(filters))
 		columns.extend([
 			{"label": _("Total Working Days"), "fieldname": "total_working_days", "fieldtype": "Float", "width": 120},
 			{"label": _("FL"), "fieldname": "fl", "fieldtype": "Float", "width": 120},
@@ -35,7 +40,7 @@ def get_columns(filters):
 			{"label": _("LOP Days"), "fieldname": "lop_days", "fieldtype": "Float", "width": 120},
 			{"label": _("Payable Days"), "fieldname": "payable_days", "fieldtype": "Float", "width": 120},
 			{"label": _("OT Shift"), "fieldname": "ot_shifts", "fieldtype": "Float", "width": 120},
-			{"label": _("Fixed Salary"), "fieldname": "fixed_salary", "fieldtype": "Float", "width": 120},
+			{"label": _("Fixed Salary"), "fieldname": "fixed_salary", "fieldtype": "Currency", "width": 120},
 			{"label":_("Basic + DA"),"fieldname":"basic_da","fieldtype":"Currency","width":100},
 			{"label":_("HRA"),"fieldname":"hra","fieldtype":"Currency","width":100},
 			{"label":_("Others"),"fieldname":"others","fieldtype":"Currency","width":100},
@@ -48,6 +53,7 @@ def get_columns(filters):
 			{"label":_("ESI"),"fieldname":"esi","fieldtype":"Currency","width":100},
 			{"label":_("PF"),"fieldname":"pf","fieldtype":"Currency","width":100},
 			{"label":_("PT"),"fieldname":"pt","fieldtype":"Currency","width":100},
+			{"label":_("Welfare Fund"),"fieldname":"welfare_fund","fieldtype":"Currency","width":100},
 			{"label":_("Lunch"),"fieldname":"lunch","fieldtype":"Currency","width":100},
 			{"label":_("CUG"),"fieldname":"cug","fieldtype":"Currency","width":100},
 			{"label":_("Advance"),"fieldname":"advance","fieldtype":"Currency","width":100},
@@ -57,7 +63,7 @@ def get_columns(filters):
 		])
 	elif filters.select == "Summarized Report":
 		columns.extend([
-			{"label": _("Shift"), "fieldname": "shift", "fieldtype": "Data", "width": 65},
+			{"label": _("Shift"), "fieldname": "shift", "fieldtype": "Data", "width": 100},
 			{"label": _("No. of Shifts"), "fieldname": "shift_count", "fieldtype": "Float", "width": 120},
 			{"label": _("Rate"), "fieldname": "rate", "fieldtype": "Float", "width": 120},
 			{"label": _("Amount"), "fieldname": "amount", "fieldtype": "Float", "width": 120},
@@ -85,12 +91,12 @@ def get_data(filters):
 	attendance_records = get_checkin_map(attendance_records, filters)
 	for employee in employees:
 		d = {
-			# 'serial': employee.serial,
 			'employee': employee.name,
 			'employee_name': employee.employee_name,
 			"department":employee.department,
 			"designation":employee.designation,
 			"employment_type":employee.employment_type,
+			"branch":employee.branch,
 		}
 		if filters.select == "PF View":
 			get_pf_detail(d, filters, employee, attendance_records.get(employee.name))
@@ -128,7 +134,8 @@ def get_pf_detail(data, filters, employee, attendance_records):
 			no_of_shifts += (value.get('sd_no_of_shifts') or 0)
 			general_shift += (value.get('general_shifts') or 0)
 			ot_shift += (value.get('ot_shifts') or 0)
-			
+			data[date] = str(value.get('sd_no_of_shifts') or 0)
+
 		holiday = frappe.get_value("Shift Type", employee.default_shift, "holiday_list")
 		holiday_doc = frappe.get_doc("Holiday List", holiday)
 		week_offs = 0
@@ -158,20 +165,24 @@ def get_pf_detail(data, filters, employee, attendance_records):
 		payable_others = payable_days * others
 		pf_salary = payable_basic_da + payable_hra
 		ot_salary = ot_shift * fixed_salary
-		gross_salary = payable_others + pf_salary + ot_salary
+		gross_salary = pf_salary + ot_salary + payable_others
 		esi = gross_salary / 100
 		esi = esi * 0.75
 		pf = pf_salary / 100
 		pf = pf * 12
-		wellfare_fund = 20
+		month_count = round(total_days/30)
+		welfare_fund = frappe.db.get_single_value("Essdee Attendance Settings", "welfare_fund")
+		welfare_fund = welfare_fund * month_count
 		pt = 0
 		lunch = 0
 		cug = 0
 		advance = 0
 		lic = 0
-		total_deduction = esi + pf + pt + wellfare_fund
+		total_deduction = esi + pf + pt + welfare_fund
 		take_home = gross_salary - total_deduction
 		data.update({
+			"uan": employee.sd_uan,
+			"esic": employee.sd_esic,
 			"total_working_days": total_working_days,
 			"fl": fl,
 			"present_days": present_days,
@@ -192,6 +203,7 @@ def get_pf_detail(data, filters, employee, attendance_records):
 			"esi": esi,
 			"pf": pf,
 			"pt": pt,
+			"welfare_fund": welfare_fund,
 			"lunch": lunch,
 			"cug": cug,
 			"advance": advance,
@@ -229,7 +241,6 @@ def get_employees(filters):
 	Employee = frappe.qb.DocType("Employee")
 	
 	query = frappe.qb.from_(Employee).select(
-		# Employee.sd_attendance_book_serial.as_("serial"),
 		Employee.name, 
 		Employee.employee_name, 
 		Employee.default_shift,
@@ -240,10 +251,10 @@ def get_employees(filters):
 		Employee.designation,
 		Employee.employment_type,
 		Employee.sd_uan,
+		Employee.sd_esic,
+		Employee.branch
 	)
 	query = apply_employee_filters(query, filters, Employee)
-	# query = query.orderby(Employee.sd_attendance_book_serial.isnull())
-	# query = query.orderby(Employee.sd_attendance_book_serial)
 	return query.run(as_dict = 1)
 
 def get_attendance_map(filters):

@@ -5,7 +5,9 @@
 let cur_cell_height = 1;
 function get_cell_height(rows) {
 	let cellHeights = [33, 33, 50, 75, 90]
-	if (rows < 0 ) {
+	if (rows < 0) {
+		return 33;
+	} else if(frappe.query_report.get_filter_value("select") == "PF View"){
 		return 33;
 	} else if (rows >= 0 && rows < cellHeights.length) {
 		return cellHeights[rows]
@@ -108,27 +110,7 @@ frappe.query_reports["Weekly Employee Report"] = {
 			"options":"Day Wise Report\nSummarized Report\nPF View",
 			"default":"Day Wise Report",
 			on_change: ()=> {
-				if(frappe.query_report.get_filter_value("select") == "Day Wise Report"){
-					frappe.query_report.filters[9].toggle(1)
-					frappe.query_report.filters[10].toggle(1)
-					frappe.query_report.filters[11].toggle(1)
-					frappe.query_report.filters[12].toggle(1)
-					frappe.query_report.filters[13].toggle(1)
-				}
-				else if(frappe.query_report.get_filter_value("select") == "Summarized Report"){
-					frappe.query_report.filters[9].toggle(0)
-					frappe.query_report.filters[10].toggle(0)
-					frappe.query_report.filters[11].toggle(0)
-					frappe.query_report.filters[12].toggle(0)
-					frappe.query_report.filters[13].toggle(0)
-				}
-				else{
-					frappe.query_report.filters[9].toggle(0)
-					frappe.query_report.filters[10].toggle(0)
-					frappe.query_report.filters[11].toggle(0)
-					frappe.query_report.filters[12].toggle(0)
-					frappe.query_report.filters[13].toggle(0)
-				}
+				hide_unhide_filters(frappe.query_report.get_filter_value("select"))
 				frappe.query_report.refresh();
 			}
 		},
@@ -197,7 +179,25 @@ frappe.query_reports["Weekly Employee Report"] = {
 		})
 	},
 	onload(){
-		frappe.query_report.set_filter_value("select", frappe.query_report.get_filter_value("select"))
+		hide_unhide_filters(frappe.query_report.get_filter_value("select"))
 		frappe.query_report.refresh();
 	}
 }
+
+function hide_unhide_filters(selected_value) {
+	if(selected_value == "Day Wise Report"){
+		frappe.query_report.filters[9].toggle(1)
+		frappe.query_report.filters[10].toggle(1)
+		frappe.query_report.filters[11].toggle(1)
+		frappe.query_report.filters[12].toggle(1)
+		frappe.query_report.filters[13].toggle(1)
+	}
+	else{
+		frappe.query_report.filters[9].toggle(0)
+		frappe.query_report.filters[10].toggle(0)
+		frappe.query_report.filters[11].toggle(0)
+		frappe.query_report.filters[12].toggle(0)
+		frappe.query_report.filters[13].toggle(0)
+	}
+}
+
