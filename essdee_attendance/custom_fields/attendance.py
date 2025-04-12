@@ -15,11 +15,17 @@ attendance_fields = [
         "insert_after":"early_exit",
     },
     {
+        "fieldname": "sd_festival_leave",
+        "fieldtype":"Check",
+        "label":"Festival Leave",
+        "insert_after": "section_break_sd_details",
+    },
+    {
         "fieldname": "sd_general_shifts",
         "fieldtype": "Float",
         "label": "General Shifts",
-        "insert_after": "section_break_sd_details",
         "allow_on_submit":True,
+        "insert_after": "sd_festival_leave",
         "read_only":True,
         "precision": 2
     },

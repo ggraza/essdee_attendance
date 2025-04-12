@@ -16,7 +16,8 @@
   "permission_details_tab",
   "personal_permission_hours",
   "personal_permission_limit",
-  "permission_email_template"
+  "permission_email_template",
+  "welfare_fund"
  ],
  "fields": [
   {
@@ -67,7 +68,7 @@
   {
    "fieldname": "permission_details_tab",
    "fieldtype": "Tab Break",
-   "label": "Permission Details"
+   "label": "Employee Details"
   },
   {
    "fieldname": "personal_permission_hours",
@@ -84,12 +85,17 @@
    "fieldtype": "Link",
    "label": "Permission Email Template",
    "options": "Email Template"
+  },
+  {
+   "fieldname": "welfare_fund",
+   "fieldtype": "Currency",
+   "label": "Welfare Fund"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-08-13 15:26:24.877254",
+ "modified": "2025-04-07 11:24:13.281302",
  "modified_by": "Administrator",
  "module": "Essdee Attendance",
  "name": "Essdee Attendance Settings",

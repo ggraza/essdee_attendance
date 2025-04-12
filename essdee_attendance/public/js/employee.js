@@ -1,5 +1,6 @@
 frappe.ui.form.on("Employee", {
 	refresh(frm){
+		frm.set_df_property('sd_increment_records','cannot_delete_rows',true)
 		let user_roles = frappe.user_roles
 		let index = user_roles.indexOf("HR Manager")
 		if(index == -1 || frm.doc.employment_type != "Shift"){
