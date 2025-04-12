@@ -81,7 +81,22 @@ def calc(doc_name):
 			holiday_data = {}
 			for day in holiday_doc.holidays:
 				d = getdate(day.holiday_date)
-				holiday_data[str(d)] = day.weekly_off
+				d1 = getdate(from_date)
+				d2 = getdate(to_date)
+				if d >= d1 and d <= d2:
+					holiday_data[str(d)] = day.weekly_off
+			attendance_date_list = []
+			for attendance in attendance_list:
+				attendance_date = frappe.get_value("Attendance", attendance, "attendance_date")
+				d = getdate(attendance_date)
+				attendance_date_list.append(str(d))
+			
+			additional_reduce = 0
+			for holiday in holiday_data:
+				x = str(holiday)
+				if x not in attendance_date_list and not holiday_data[x]:
+					create_fl_attendance(holiday, employee)	
+					additional_reduce += 1				
 
 			extra_shifts = 0
 			attendance_data = {}
@@ -151,6 +166,7 @@ def calc(doc_name):
 			old_value = total_shifts * shift_rate
 			new_shifts = old_value/ shift_wages
 			additional_shifts = new_shifts - total_alter_shifts
+			additional_shifts -= additional_reduce
 			changed_indexes = []
 			max_total_salary = main_shifts * shift_rate
 			max_one_shift_salary = max_total_salary / total_days
@@ -181,68 +197,16 @@ def calc(doc_name):
 						index, x = update_index(index, alter_shifts, x)
 					if len(changed_indexes) >= length:
 						break
+				
+				if additional_shifts:
+					total_attendance_list.append({
+						"employee": employee,
+						"shifts": additional_shifts,
+						"required_extra": max_one_shift_salary,
+					})
 
-				while additional_shifts > -0.25:
-					check = False
-					index = 0
-					x = True
-					if greater_than_two > 0:
-						changed_indexes = []
-						while True:
-							if alter_shifts[index] not in [None] and original_shifts[index] > flt(2):
-								index, additional_shifts, x, check = update_shift(index, changed_indexes, alter_shifts, additional_shifts, x)
-								if check:
-									break
-							else:
-								index, x = update_index(index, alter_shifts, x)
-							if len(changed_indexes) >= greater_than_two:
-								break
-					if check:
-						break
-					x = True
-					if equal_to_two > 0:
-						index = 0
-						changed_indexes = []
-						while True:
-							if alter_shifts[index] not in [None] and original_shifts[index] == flt(2):
-								index, additional_shifts, x, check = update_shift(index, changed_indexes, alter_shifts, additional_shifts, x)
-								if check:
-									break
-							else:
-								index, x = update_index(index, alter_shifts, x)
-							if len(changed_indexes) >= equal_to_two:
-								break
-					
-					if check:
-						break
-					x = True
-					if less_than_two > 0:
-						index = 0
-						changed_indexes = []
-						while True:
-							if alter_shifts[index] not in [None] and original_shifts[index] < flt(2) and original_shifts[index] > flt(1):
-								index, additional_shifts, x, check = update_shift(index, changed_indexes, alter_shifts, additional_shifts, x)
-								if check:
-									break	
-							else:
-								index, x = update_index(index, alter_shifts, x)
-							if len(changed_indexes) >= less_than_two:
-								break
-					if check:
-						break
 				for idx, attendance in enumerate(attendance_list):
 					x = alter_shifts[idx] or 0.0
-					if x > 0.25:
-						emp , no_of_shifts = frappe.get_value("Attendance", attendance[0],["employee","sd_no_of_shifts"])
-						total_attendance_list.append({
-							"attendance": attendance[0],
-							"employee": emp,
-							"no_of_shifts": no_of_shifts,
-							"general_shifts": complete_alter_shifts[idx],
-							"ot_shifts": x,
-							"total_shifts": complete_alter_shifts[idx] + x,
-							"required_extra": max_one_shift_salary,
-						})
 					if complete_alter_shifts[idx] not in [None]:
 						frappe.db.sql(
 							f"""
@@ -313,3 +277,71 @@ def update_index(index, alter_shifts, x):
 			index = 0
 			x = True
 	return index, x
+
+def create_fl_attendance(holiday, employee):
+	att_doc = frappe.new_doc("Attendance")
+	att_doc.employee = employee
+	att_doc.status = "Present"
+	att_doc.attendance_date = holiday
+	cmpy, dept, shift, shift_rate, shift_wages, min_wages = frappe.get_value("Employee", employee, ['company','department','default_shift', 'sd_shift_rate', 'sd_shift_wages', 'sd_minimum_wages'])
+	att_doc.shift = shift
+	att_doc.sd_no_of_shifts = 0
+	att_doc.sd_general_shifts = 1
+	att_doc.sd_ot_shifts = 0
+	att_doc.sd_shift_rate = shift_rate
+	att_doc.sd_shift_wages =  shift_wages
+	att_doc.sd_minimum_wages = min_wages
+	att_doc.company = cmpy
+	att_doc.sd_festival_leave = 1
+	att_doc.department = dept
+	att_doc.save()
+	att_doc.submit()
+
+# while additional_shifts > -0.25:
+# 	check = False
+# 	index = 0
+# 	x = True
+# 	if greater_than_two > 0:
+# 		changed_indexes = []
+# 		while True:
+# 			if alter_shifts[index] not in [None] and original_shifts[index] > flt(2):
+# 				index, additional_shifts, x, check = update_shift(index, changed_indexes, alter_shifts, additional_shifts, x)
+# 				if check:
+# 					break
+# 			else:
+# 				index, x = update_index(index, alter_shifts, x)
+# 			if len(changed_indexes) >= greater_than_two:
+# 				break
+# 	if check:
+# 		break
+# 	x = True
+# 	if equal_to_two > 0:
+# 		index = 0
+# 		changed_indexes = []
+# 		while True:
+# 			if alter_shifts[index] not in [None] and original_shifts[index] == flt(2):
+# 				index, additional_shifts, x, check = update_shift(index, changed_indexes, alter_shifts, additional_shifts, x)
+# 				if check:
+# 					break
+# 			else:
+# 				index, x = update_index(index, alter_shifts, x)
+# 			if len(changed_indexes) >= equal_to_two:
+# 				break
+	
+# 	if check:
+# 		break
+# 	x = True
+# 	if less_than_two > 0:
+# 		index = 0
+# 		changed_indexes = []
+# 		while True:
+# 			if alter_shifts[index] not in [None] and original_shifts[index] < flt(2) and original_shifts[index] > flt(1):
+# 				index, additional_shifts, x, check = update_shift(index, changed_indexes, alter_shifts, additional_shifts, x)
+# 				if check:
+# 					break	
+# 			else:
+# 				index, x = update_index(index, alter_shifts, x)
+# 			if len(changed_indexes) >= less_than_two:
+# 				break
+# 	if check:
+# 		break

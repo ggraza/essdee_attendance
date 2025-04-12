@@ -19,12 +19,22 @@ overview_tab_fields = [
         "fieldtype": "Currency",
         "label": "Shift Wages",
         "insert_after": "sd_shift_rate",
+        "read_only": 1,
         "precision": 2
+    },
+    {
+        "fieldname": "sd_worker_wage_class",
+        "fieldtype": "Link",
+        "label": "Worker Wage Class",
+        "insert_after": "sd_shift_wages",
+        "options": "SD Worker Wage Class",
     },
     {
         "fieldname": "sd_minimum_wages",
         "fieldtype": "Currency",
         "label": "Minimum Wages",
+        "fetch_from": "sd_worker_wage_class.sd_minimum_wages",
+        "read_only": 1,
         "insert_after": "sd_shift_wages",
         "precision": 2
     },
@@ -92,6 +102,13 @@ overview_tab_fields = [
         'label': 'Hostel Room Number',
         'insert_after':'canteen'
     },
+    {
+        "fieldname": "sd_increment_records",
+        "fieldtype": "Table",
+        "options": "SD Increment Record",
+        "label": "SD Increment Records",
+        "insert_after": "internal_work_history",
+    }
 ]
 
 address_tab_fields = [

@@ -17,9 +17,9 @@ class EssdeeAdvanceEntry(Document):
 	def on_submit(self):
 		details = get_list(self)
 		make_ledger(details)
+
 	def on_cancel(self):
 		cancel_ledger(self.name,'Essdee Advance Entry')	
-
 
 def get_list(doc):
 	x = []
@@ -40,13 +40,13 @@ def get_list(doc):
 @frappe.whitelist()
 def download_entries(**args):
 	doc_name = args['doc_name']
-	columns = ['Employee','Employee Name','Amount', "Type",'Bank Account Status','Salary Mode', 'Advance Slip',"Date"]
+	columns = ['Employee','Employee Name','Bank Account Name','Bank A/C No','IFSC Code','Amount', "Type",'Bank Account Status','Salary Mode', 'Advance Slip',"Date"]
 
 	entries = []
 	doc = frappe.get_doc('Essdee Advance Entry',doc_name)
 	for row in doc.essdee_advance_entry_details:
-		emp_name, bank_status = frappe.get_value("Employee", row.employee, ['employee_name', "sd_bank_account_status"])
-		entries.append([row.employee, emp_name, str(row.amount), row.type, bank_status, row.salary_mode, doc_name, str(doc.posting_date)])
+		emp_name, bank_status, bank_name, acc_no, ifsc = frappe.get_value("Employee", row.employee, ['employee_name', "sd_bank_account_status","sd_bank_account_name","bank_ac_no","ifsc_code"])
+		entries.append([row.employee, emp_name, bank_name, acc_no,ifsc,str(row.amount), row.type, bank_status, row.salary_mode, doc_name, str(doc.posting_date)])
 	
 	doc.downloaded_time = datetime.now()
 	doc.save()
