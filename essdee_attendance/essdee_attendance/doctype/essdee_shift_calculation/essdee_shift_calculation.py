@@ -285,7 +285,7 @@ def create_fl_attendance(holiday, employee):
 	att_doc.attendance_date = holiday
 	cmpy, dept, shift, shift_rate, shift_wages, min_wages = frappe.get_value("Employee", employee, ['company','department','default_shift', 'sd_shift_rate', 'sd_shift_wages', 'sd_minimum_wages'])
 	att_doc.shift = shift
-	att_doc.sd_no_of_shifts = 1
+	att_doc.sd_no_of_shifts = 0
 	att_doc.sd_general_shifts = 1
 	att_doc.sd_ot_shifts = 0
 	att_doc.sd_shift_rate = shift_rate
